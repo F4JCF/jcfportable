@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=JCF Portable
+GenericName=Carnet d'activation portable
+Comment=Carnet de trafic POTA, WWFF, SOTA, GMA, WWBOTA inspiré de Ham2K PoLo
+Exec=jcfportable
+Icon=jcfportable
+Terminal=false
+Categories=HamRadio;Network;Utility;
+Keywords=radioamateur;ham;pota;sota;wwff;log;carnet;
