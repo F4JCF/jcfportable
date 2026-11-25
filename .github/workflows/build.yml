@@ -75,6 +75,11 @@ jobs:
           Start-Sleep 10
           if ($p.HasExited) { throw "Le programme s'est arrêté au démarrage (code $($p.ExitCode))" }
           Stop-Process $p
+          $e = Get-ChildItem out/*-windows.exe | Select-Object -First 1
+          $q = Start-Process -PassThru $e.FullName
+          Start-Sleep 20
+          if ($q.HasExited) { throw "L'exe unique s'est arrêté au démarrage (code $($q.ExitCode))" }
+          Stop-Process $q
 
       - uses: actions/upload-artifact@v4
         with:

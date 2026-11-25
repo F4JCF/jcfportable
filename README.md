@@ -23,6 +23,8 @@ Téléchargez la dernière version dans l'onglet **Releases** (ou **Actions → 
   administrateur nécessaire. Hamlib est inclus. Au premier lancement, Windows SmartScreen peut afficher
   « Windows a protégé votre ordinateur » (logiciel non signé) : *Informations complémentaires* →
   *Exécuter quand même*.
+* **`JCFPortable-x.y.z-windows.exe`** : un seul fichier, rien à installer — double-clic et c'est parti
+  (démarrage un peu plus lent : quelques secondes).
 * **`JCFPortable-x.y.z-windows-portable.zip`** : à décompresser (par ex. sur une clé USB), puis lancer
   `jcfportable.exe`.
 * Pour le CAT, installez le pilote USB de votre radio (Silicon Labs CP210x pour les Yaesu FT-991A,

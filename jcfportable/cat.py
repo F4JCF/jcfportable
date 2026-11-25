@@ -28,6 +28,8 @@ def find_tool(name):
         candidates.append(Path(appdir) / "usr" / "bin" / name)
     if getattr(sys, "frozen", False):
         candidates.append(Path(sys.executable).parent / "hamlib" / name)
+        if hasattr(sys, "_MEIPASS"):  # exe unique : fichiers décompressés dans un dossier temporaire
+            candidates.append(Path(sys._MEIPASS) / "hamlib" / name)
     for c in candidates:
         if c.exists():
             return str(c)

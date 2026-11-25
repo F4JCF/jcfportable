@@ -1,4 +1,4 @@
-# Construit la version Windows : installateur Inno Setup + version portable (.zip).
+# Construit la version Windows : exe unique, installateur Inno Setup et version portable (.zip).
 # Exécuté par GitHub Actions sur windows-latest.
 $ErrorActionPreference = "Stop"
 Set-Location (Join-Path $PSScriptRoot "..")
@@ -39,4 +39,15 @@ if (-not (Test-Path $Iscc)) {
 }
 & $Iscc "/DAppVersion=$Version" "/DSourceDir=$((Resolve-Path $App).Path)" "/O$((Resolve-Path out).Path)" packaging/jcfportable.iss
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup a échoué" }
+# 5) Exe unique : tout (Python, Qt, Hamlib) dans un seul fichier à double-cliquer
+pyinstaller --noconfirm --onefile --windowed --name "JCFPortable-$Version-windows" --paths . `
+  --distpath build/onefile --workpath build/onefile-work `
+  --icon packaging/jcfportable.ico `
+  --add-data "jcfportable/icon.png:jcfportable" `
+  --add-data "$($Rigctld.DirectoryName):hamlib" `
+  --hidden-import PySide6.QtSerialPort `
+  --exclude-module PySide6.QtWebEngineCore --exclude-module PySide6.Qt3DCore `
+  packaging/run.py
+if ($LASTEXITCODE -ne 0) { throw "PyInstaller (exe unique) a échoué" }
+Copy-Item "build/onefile/JCFPortable-$Version-windows.exe" out/
 Get-ChildItem out
