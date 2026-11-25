@@ -7,7 +7,7 @@ from PySide6.QtCore import QEvent, QObject, Qt, QTimer, QUrl
 from PySide6.QtGui import QAction, QColor, QDesktopServices, QFont, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDockWidget, QFrame, QHBoxLayout,
                                QLabel, QLineEdit, QListWidget, QListWidgetItem, QMainWindow,
-                               QMessageBox, QPushButton, QTableWidget, QTabWidget, QTextBrowser, QToolBar,
+                               QMessageBox, QPushButton, QStyle, QApplication, QTableWidget, QTabWidget, QTextBrowser, QToolBar,
                                QVBoxLayout, QWidget)
 
 from jcfportable import APP_NAME, VERSION, adif, commands, maps, spots
@@ -73,11 +73,22 @@ class MainWindow(QMainWindow):
     def _build_toolbar(self):
         tb = QToolBar("Actions")
         tb.setMovable(False)
-        tb.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        tb.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         self.addToolBar(tb)
 
+        icon_map = {
+            "Nouvelle opération": QStyle.SP_FileDialogNewFolder,
+            "Dupliquer": QStyle.SP_FileDialogNewFolder,
+            "Supprimer": QStyle.SP_TrashIcon,
+            "Exporter ADIF": QStyle.SP_DialogSaveButton,
+            "Carte des QSO": QStyle.SP_DirIcon,
+            "Données hors ligne": QStyle.SP_DriveHDIcon,
+            "Réglages": QStyle.SP_ComputerIcon,
+            "Aide": QStyle.SP_MessageBoxQuestion,
+        }
+
         def act(text, slot, key=None):
-            a = QAction(text, self)
+            a = QAction(QApplication.style().standardIcon(icon_map[text]), text, self)
             a.triggered.connect(slot)
             if key:
                 a.setShortcut(QKeySequence(key))
@@ -116,6 +127,7 @@ class MainWindow(QMainWindow):
         f.setPointSize(13)
         f.setBold(True)
         self.op_title.setFont(f)
+        self.op_title.setObjectName("titre")
         self.op_refs = QLabel("")
         self.op_refs.setTextFormat(Qt.RichText)
         left.addWidget(self.op_title)
@@ -123,10 +135,12 @@ class MainWindow(QMainWindow):
         h.addLayout(left, 1)
         self.vfo_label = QLabel()
         self.vfo_label.setFont(BIG)
+        self.vfo_label.setObjectName("big")
         self.vfo_label.setTextFormat(Qt.RichText)
         h.addWidget(self.vfo_label)
         self.clock_label = QLabel()
         self.clock_label.setFont(BIG)
+        self.clock_label.setObjectName("big")
         self.clock_label.setTextFormat(Qt.RichText)
         self.clock_label.setCursor(Qt.PointingHandCursor)
         self.clock_label.setToolTip("Cliquez pour revenir à l'heure actuelle")
@@ -172,7 +186,7 @@ class MainWindow(QMainWindow):
         self.e_call = QLineEdit()
         self.e_call.setFont(BIG)
         self.e_call.setPlaceholderText("Indicatif ou commande (20m, 14.250, CW, QRV…)")
-        self.e_call.setMinimumWidth(320)
+        self.e_call.setMinimumWidth(280)
         self.e_sent = QLineEdit()
         self.e_rcvd = QLineEdit()
         for e, ph in ((self.e_sent, "Env."), (self.e_rcvd, "Reçu")):
@@ -188,9 +202,12 @@ class MainWindow(QMainWindow):
         self.e_notes = QLineEdit()
         self.e_notes.setFont(BIG)
         self.e_notes.setPlaceholderText("Notes")
+        self.e_notes.setMinimumWidth(160)
         self.b_log = QPushButton("Enregistrer ⏎")
         self.b_log.setFont(BIG)
         self.b_log.clicked.connect(self.submit)
+        for wdg in (self.e_call, self.e_sent, self.e_rcvd, self.e_p2p, self.e_notes, self.b_log):
+            wdg.setObjectName("big")
         for wdg in (self.e_call, self.e_sent, self.e_rcvd, self.e_p2p_prog, self.e_p2p, self.e_notes):
             row.addWidget(wdg)
         row.setStretchFactor(self.e_notes, 1)

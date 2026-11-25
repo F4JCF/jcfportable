@@ -24,6 +24,8 @@ def main():
         except (AttributeError, OSError):
             pass
     app.setStyle("Fusion")
+    from jcfportable.ui.theme import apply_theme
+    apply_theme(app)
     tr = QTranslator(app)
     if tr.load(QLocale("fr_FR"), "qtbase", "_", QLibraryInfo.path(QLibraryInfo.TranslationsPath)):
         app.installTranslator(tr)
