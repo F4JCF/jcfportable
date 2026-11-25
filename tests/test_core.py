@@ -81,11 +81,11 @@ def test_adif_export(tmp_path):
     assert "F4JCF-P@FR-0123-20261125.adi" in names
     assert "F4JCF-P@F-AM-468-20261125.adi" in names
     assert len(paths) == 4
-    pota = (tmp_path / "out" / "F4JCF-P@FR-0123-20261125.adi").read_text()
+    pota = (tmp_path / "out" / "F4JCF-P@FR-0123-20261125.adi").read_text(encoding="utf-8")
     assert "<MY_POTA_REF:7>FR-0123" in pota and "<POTA_REF:7>EA-0001" in pota
     assert "<SUBMODE:3>FT4" in pota and "G0AAA" not in pota
     assert "privé" not in pota  # pas de données privées dans les logs envoyés aux programmes
-    full = [p for p in paths if p.name.endswith("complet.adi")][0].read_text()
+    full = [p for p in paths if p.name.endswith("complet.adi")][0].read_text(encoding="utf-8")
     assert "privé" in full and full.count("<EOR>") == 2
     for rec in re.findall(r"<(\w+):(\d+)>([^<]*)", pota):
         assert len(rec[2].rstrip(" ").encode()) == int(rec[1])
