@@ -67,6 +67,9 @@ peut aussi être utilisé.
 * Lecture : POTA, WWFF, SOTA, GMA, WWBOTA (actualisation automatique, filtres bande/mode).
 * Self-spot : POTA, WWFF, GMA, WWBOTA, avec auto-spot toutes les 10 minutes.
 * SOTA : l'envoi de spots demande un compte SOTA (SSO), pas encore géré — utilisez SOTAwatch.
+* GMA : depuis l'API v2, la lecture des spots demande une clé personnelle `GMA-…` et l'envoi une clé
+  `GMS-…` (à demander sur cqgma.org). Renseignez-les dans *Réglages → Spots et exports* ; sans clé,
+  les spots GMA sont simplement ignorés.
 
 ## Données
 
@@ -87,4 +90,4 @@ puis `python -m jcfportable`.
 ## Licence
 
 GPL v3 — F4JCF. Idées et sources de données reprises de Ham2K PoLo (MPL-2.0, Sebastián Delmont KI2D) ;
-le code est entièrement réécrit.
+le code est entièrement réécrit. Drapeaux : projet flag-icons (licence MIT).

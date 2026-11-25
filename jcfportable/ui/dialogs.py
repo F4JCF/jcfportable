@@ -413,6 +413,17 @@ class SettingsDialog(QDialog):
             self.spot_prog[p] = cb
             pl.addWidget(cb)
         f.addRow("Spots à afficher", pl)
+        self.gma_read = QLineEdit(settings.get("gma_read_key", ""))
+        self.gma_read.setPlaceholderText("GMA-xxxxxxxx (lecture des spots GMA)")
+        self.gma_submit = QLineEdit(settings.get("gma_submit_key", ""))
+        self.gma_submit.setPlaceholderText("GMS-xxxxxxxx (envoi de spots GMA)")
+        self.gma_submit.setEchoMode(QLineEdit.Password)
+        f.addRow("Clé GMA de lecture", self.gma_read)
+        f.addRow("Clé GMS d'envoi", self.gma_submit)
+        note = QLabel("GMA exige désormais des clés personnelles, à demander sur cqgma.org (page « API »). "
+                      "Sans clé, les spots GMA sont simplement ignorés.")
+        note.setWordWrap(True)
+        f.addRow(note)
         self.refresh = QSpinBox()
         self.refresh.setRange(30, 600)
         self.refresh.setValue(int(settings["spots_refresh_s"]))
@@ -480,6 +491,8 @@ class SettingsDialog(QDialog):
         target["cat_tcp_port"] = self.tcp.value()
         target["cat_digital_mode"] = self.digital.currentText()
         target["cat_extra"] = self.extra.text().strip()
+        target["gma_read_key"] = self.gma_read.text().strip()
+        target["gma_submit_key"] = self.gma_submit.text().strip()
         target["spots_programs"] = [p for p, cb in self.spot_prog.items() if cb.isChecked()]
         target["spots_refresh_s"] = self.refresh.value()
         target["spots_max_age_min"] = self.max_age.value()

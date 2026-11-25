@@ -9,7 +9,7 @@ mkdir -p out
 
 # 1) Application autonome (Python + Qt embarqués : rien à installer sur le PC)
 pyinstaller --noconfirm --clean --windowed --name jcfportable --paths . \
-  --add-data "jcfportable/icon.png:jcfportable" \
+  --add-data "jcfportable/icon.png:jcfportable" --add-data "jcfportable/assets:jcfportable/assets" \
   --exclude-module PySide6.QtWebEngineCore --exclude-module PySide6.Qt3DCore \
   packaging/run.py
 APP=dist/jcfportable

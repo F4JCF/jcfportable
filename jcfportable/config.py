@@ -49,6 +49,8 @@ DEFAULTS = {
     "cat_civ": "",
     "cat_extra": "",
     "cat_digital_mode": "FT8",
+    "gma_read_key": "",
+    "gma_submit_key": "",
     "spots_programs": ["POTA", "WWFF", "SOTA", "GMA", "WWBOTA"],
     "spots_refresh_s": 60,
     "spots_max_age_min": 60,

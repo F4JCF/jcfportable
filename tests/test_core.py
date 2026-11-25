@@ -89,3 +89,32 @@ def test_adif_export(tmp_path):
     assert "privé" in full and full.count("<EOR>") == 2
     for rec in re.findall(r"<(\w+):(\d+)>([^<]*)", pota):
         assert len(rec[2].rstrip(" ").encode()) == int(rec[1])
+
+
+def test_gma_spots_need_key(monkeypatch):
+    from datetime import datetime, timezone
+
+    from jcfportable import spots
+
+    now = datetime.now(timezone.utc)
+    calls = []
+
+    class R:
+        status_code = 200
+        text = ""
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"RCD": [{"ACTIVATOR": "f4abc/p", "QRG": "7032.0", "MODE": "cw", "REF": "F/AM-468",
+                             "DATE": now.strftime("%Y%m%d"), "TIME": now.strftime("%H%M")}]}
+
+    monkeypatch.setattr(spots.requests, "get", lambda url, **kw: calls.append((url, kw)) or R())
+    assert spots.fetch_all(["GMA"], 60, {}) == ([], [])
+    assert not calls
+    got, errors = spots.fetch_all(["GMA"], 60, {"gma_read": "GMA-test"})
+    assert not errors and got[0].call == "F4ABC/P" and got[0].freq == 7032.0
+    assert calls[0][0] == "https://www.gma.rocks/api/spots/gma/"
+    assert calls[0][1]["headers"]["X-API-Key"] == "GMA-test"
+    assert "clé GMS" in spots.post_spot("GMA", "F4JCF/P", "F4JCF", 7032, "CW", "F/AM-468")

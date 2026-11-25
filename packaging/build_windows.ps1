@@ -9,7 +9,7 @@ New-Item -ItemType Directory -Force out, build | Out-Null
 # 1) Application autonome (Python + Qt embarqués)
 pyinstaller --noconfirm --clean --windowed --name jcfportable --paths . `
   --icon packaging/jcfportable.ico `
-  --add-data "jcfportable/icon.png:jcfportable" `
+  --add-data "jcfportable/icon.png:jcfportable" --add-data "jcfportable/assets:jcfportable/assets" `
   --hidden-import PySide6.QtSerialPort `
   --exclude-module PySide6.QtWebEngineCore --exclude-module PySide6.Qt3DCore `
   packaging/run.py
@@ -43,7 +43,7 @@ if ($LASTEXITCODE -ne 0) { throw "Inno Setup a échoué" }
 pyinstaller --noconfirm --onefile --windowed --name "JCFPortable-$Version-windows" --paths . `
   --distpath build/onefile --workpath build/onefile-work `
   --icon packaging/jcfportable.ico `
-  --add-data "jcfportable/icon.png:jcfportable" `
+  --add-data "jcfportable/icon.png:jcfportable" --add-data "jcfportable/assets:jcfportable/assets" `
   --add-data "$($Rigctld.DirectoryName):hamlib" `
   --hidden-import PySide6.QtSerialPort `
   --exclude-module PySide6.QtWebEngineCore --exclude-module PySide6.Qt3DCore `

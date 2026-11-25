@@ -107,20 +107,35 @@ def fetch_sota():
     return out
 
 
-def fetch_gma():
-    r = requests.get("https://www.gma.rocks/api/spots/60/", headers=HEADERS, timeout=TIMEOUT)
+def fetch_gma(api_key=""):
+    """API GMA v2 : GET /api/spots/gma/ avec une clé de lecture « GMA-… » (en-tête X-API-Key)."""
+    if not api_key:
+        return []
+    r = requests.get("https://www.gma.rocks/api/spots/gma/", timeout=TIMEOUT,
+                     headers={**HEADERS, "X-API-Key": api_key})
     r.raise_for_status()
     data = r.json() or {}
+    rows = (data.get("RCD") or data.get("spots") or data.get("SPOTS") or []) if isinstance(data, dict) else data
     out = []
-    for s in data.get("RCD", []) if isinstance(data, dict) else []:
-        d, t = s.get("DATE", ""), s.get("TIME", "")
+    for s in rows or []:
+        g = {k.upper(): v for k, v in s.items()}
+        when = None
+        d, t = str(g.get("DATE", "")), str(g.get("TIME", ""))
         try:
-            when = datetime.strptime(d + t[:4], "%Y%m%d%H%M").replace(tzinfo=timezone.utc)
+            if len(d) == 8 and t:
+                when = datetime.strptime(d + t.replace(":", "")[:4], "%Y%m%d%H%M").replace(tzinfo=timezone.utc)
         except ValueError:
-            when = datetime.now(timezone.utc)
-        out.append(Spot("GMA", (s.get("ACTIVATOR") or "").upper(), _num(s.get("QRG")), _mode(s.get("MODE")),
-                        s.get("REF") or "", (s.get("NAME") or "").replace("\\", ""), when,
-                        (s.get("SPOTTER") or "").upper(), (s.get("TEXT") or "").replace("\\", "")))
+            when = None
+        if when is None:
+            when = _time(g.get("TIMESTAMP") or g.get("SPOT_TIME") or g.get("UTC"))
+        freq = _num(g.get("QRG") or g.get("KHZ") or g.get("FREQ"))
+        if 0 < freq < 1000:   # valeur en MHz
+            freq *= 1000
+        out.append(Spot("GMA", str(g.get("ACTIVATOR") or g.get("CALL") or "").upper(), freq,
+                        _mode(g.get("MODE")), g.get("REF") or g.get("REFERENCE") or "",
+                        str(g.get("NAME") or "").replace("\\", ""), when,
+                        str(g.get("SPOTTER") or g.get("MYCALL") or "").upper(),
+                        str(g.get("TEXT") or g.get("REMARKS") or g.get("COMMENT") or "").replace("\\", "")))
     return out
 
 
@@ -142,15 +157,19 @@ def fetch_wwbota():
 FETCHERS = {"POTA": fetch_pota, "WWFF": fetch_wwff, "SOTA": fetch_sota, "GMA": fetch_gma, "WWBOTA": fetch_wwbota}
 
 
-def fetch_all(programs, max_age_min=60):
+def fetch_all(programs, max_age_min=60, keys=None):
     """Retourne (spots, erreurs) ; un service en panne n'empêche pas les autres."""
+    keys = keys or {}
     spots, errors = [], []
     for p in programs:
         fn = FETCHERS.get(p)
         if not fn:
             continue
+        if p == "GMA" and not keys.get("gma_read"):
+            continue  # la lecture des spots GMA exige une clé personnelle (Réglages > Spots)
         try:
-            spots += [s for s in fn() if s.call and s.age_min <= max_age_min]
+            got = fn(keys.get("gma_read")) if p == "GMA" else fn()
+            spots += [s for s in got if s.call and s.age_min <= max_age_min]
         except Exception as e:  # noqa: BLE001 — on remonte le message à l'interface
             errors.append(f"{p} : {e}")
     spots.sort(key=lambda s: s.time, reverse=True)
@@ -160,8 +179,9 @@ def fetch_all(programs, max_age_min=60):
 # ---------------------------------------------------------------------------
 # Envoi de spots (self-spot ou spot d'une autre station)
 # ---------------------------------------------------------------------------
-def post_spot(program, activator, spotter, freq_khz, mode, ref, comment=""):
+def post_spot(program, activator, spotter, freq_khz, mode, ref, comment="", keys=None):
     """Envoie un spot. Retourne None si OK, sinon un message d'erreur."""
+    keys = keys or {}
     mode = mode or "SSB"
     try:
         if program == "POTA":
@@ -176,10 +196,20 @@ def post_spot(program, activator, spotter, freq_khz, mode, ref, comment=""):
             if r.status_code != 200 and "Duplicate" in r.text:
                 return None
         elif program == "GMA":
-            r = requests.post("https://www.gma.rocks/spotsmart2.php", timeout=TIMEOUT,
-                              headers={"User-Agent": USER_AGENT},
-                              data={"yspotter": spotter, "ycall": activator, "yreference": ref,
-                                    "yqrg": str(freq_khz), "ymode": mode, "ycomment": comment, "B1": "Submit"})
+            key = keys.get("gms_submit")
+            if not key:
+                return ("GMA : l'envoi de spots exige une clé GMS personnelle "
+                        "(Réglages > Spots et exports)")
+            r = requests.post("https://www.gma.rocks/api/spot-submit/", timeout=TIMEOUT,
+                              headers={**HEADERS, "Content-Type": "application/json", "X-API-Key": key},
+                              json={"SPOT": [{"MYCALL": spotter, "ACTIVATOR": activator, "REF": ref,
+                                              "KHZ": f"{freq_khz:.1f}", "MODE": mode, "REMARKS": comment}]})
+            if r.status_code < 300:
+                try:
+                    if r.json().get("ok") is False:
+                        return f"GMA : spot refusé ({r.text[:200]})"
+                except ValueError:
+                    pass
         elif program == "WWBOTA":
             r = requests.post("https://api.wwbota.org/spots/", timeout=TIMEOUT, headers=HEADERS,
                               json={"spotter": spotter, "call": activator, "freq": freq_khz / 1000, "mode": mode,
